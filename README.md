@@ -1,103 +1,282 @@
-# Building a Scalable Web3 dApp with AWS and Blockchain Integration
+# Building a Scalable Decentralized Application (DApp) with AWS Integration
+
+This project demonstrates how to integrate AWS cloud services with a decentralized application (DApp) that uses an ERC20 token smart contract. The DApp allows users to connect their MetaMask wallet, interact with the blockchain, and fetch token balances using AWS Lambda and API Gateway.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Architecture Diagram](#architecture-diagram)
+3. [Features](#features)
+4. [Prerequisites](#prerequisites)
+5. [Setup Instructions](#setup-instructions)
+   - [Smart Contract Deployment](#smart-contract-deployment)
+   - [AWS Lambda Function](#aws-lambda-function)
+   - [API Gateway](#api-gateway)
+   - [Frontend Setup](#frontend-setup)
+6. [How It Works](#how-it-works)
+7. [Tools and Technologies](#tools-and-technologies)
+8. [Contributing](#contributing)
+9. [License](#license)
+
+---
 
 ## Overview
-This guide walks you through building a decentralized application (dApp) that integrates blockchain technology with AWS services to create a scalable, secure infrastructure. By combining smart contracts with AWS Lambda, API Gateway, and IPFS, this project demonstrates how to automate cloud processes while ensuring decentralized data storage.
 
-## Architecture
-The architecture of this dApp consists of the following components:
-
-- **Blockchain:** Smart contracts deployed on Ethereum to handle decentralized logic.
-- **AWS Lambda:** Automates backend processes triggered by blockchain events.
-- **Amazon API Gateway:** Serves as the API interface between blockchain and AWS services.
-- **IPFS:** Provides decentralized data storage, ensuring immutability and accessibility.
-- **Amazon S3:** Used for additional off-chain data storage.
-
-## Project Components
-### 1. Smart Contracts
-The core of the dApp is built using Solidity smart contracts. This project implements an ERC-20 token contract that allows users to mint and transfer tokens.
-
-#### Token.sol (ERC-20 Token Contract)
-```solidity
-function mint(address to, uint256 amount) public {
-    require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
-    _mint(to, amount);
-}
-```
-
-#### Deployment
-1. Open [Remix](https://remix.ethereum.org/)
-2. Copy and paste the `Token.sol` contract.
-3. Compile the contract using the Solidity Compiler.
-4. Deploy the contract to a testnet (e.g., Sepolia or Ropsten) using MetaMask.
-5. Interact with the contract using functions like `mint()` and `transfer()`.
+This project integrates AWS cloud services with a decentralized application (DApp) that uses an ERC20 token smart contract deployed on the Ethereum Sepolia testnet. The frontend is built using React.js and connects to MetaMask for wallet interaction. AWS Lambda and API Gateway handle backend logic and expose an HTTP endpoint for the frontend to interact with the blockchain.
 
 ---
-### 2. AWS Integration
 
-To scale the dApp efficiently, AWS services handle backend logic and event-based automation.
-AWS Lambda Setup (Node.js)
-Navigate to AWS Lambda and create a new function.
-Select "Author from Scratch" and choose Node.js as the runtime.
-Paste the following code to listen for blockchain events:
+## Architecture Diagram
 
-
-```node.js
-
-exports.handler = async (event) => {
-    try {
-        const transactionDetails = JSON.parse(event.body);
-        console.log("Transaction details received:", transactionDetails);
-        
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'Lambda executed successfully' })
-        };
-    } catch (error) {
-        console.error("Error processing transaction:", error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Internal Server Error' })
-        };
-    }
-};
+```plaintext
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|   User Browser    |       |   MetaMask Wallet |       |   Blockchain      |
+|  (React Frontend) |<----->|   (Sepolia Testnet)|<----->|   (ERC20 Smart     |
+|                   |       |                   |       |   Contract)       |
+|  - Connect Wallet |       | - Sign Transactions|      |                   |
+|  - Fetch Balance  |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+          |                           ^                           ^
+          |                           |                           |
+          v                           |                           |
++-------------------+                 |                           |
+|                   |                 |                           |
+|   API Gateway     |                 |                           |
+|   (AWS Service)   |                 |                           |
+|                   |                 |                           |
++-------------------+                 |                           |
+          |                           |                           |
+          v                           |                           |
++-------------------+                 |                           |
+|                   |                 |                           |
+|   AWS Lambda      |                 |                           |
+|   (Node.js)       |-----------------+                           |
+|                   |                                             |
++-------------------+                                             |
+          |                                                       |
+          v                                                       |
++-------------------+                                             |
+|                   |                                             |
+|   Web3.js Library |---------------------------------------------+
+|   (Blockchain     |
+|   Interaction)    |
++-------------------+
 ```
-
-#### API Gateway Setup
-1. Create a new API in **Amazon API Gateway**.
-2. Link it to the AWS Lambda function.
-3. Define API methods to handle requests from the frontend or smart contracts.
 
 ---
-### 3. Frontend (Optional)
-The frontend will interact with the deployed smart contracts using **web3.js** or **ethers.js**. It will:
-- Connect to MetaMask.
-- Display token balances.
-- Allow users to execute transactions (e.g., mint, transfer tokens).
 
-## Deployment Steps
-### Clone the Repository
-```sh
-git clone https://github.com/empty-bytes/web3-aws.git
-cd web3-aws
-```
+## Features
 
-### Deploy Smart Contracts
-1. Navigate to the `smart_contracts/` folder.
-2. Open `Token.sol` in Remix.
-3. Compile and deploy to a testnet.
-4. Save the contract address for further integration.
+- **MetaMask Integration**: Users can connect their MetaMask wallet to the DApp.
+- **Token Balance Query**: Fetch the ERC20 token balance of a connected wallet address.
+- **AWS Lambda Backend**: Serverless backend to handle blockchain interactions.
+- **API Gateway**: Exposes the AWS Lambda function as an HTTP endpoint for the frontend.
+- **Scalable and Secure**: Leverages AWS serverless architecture for scalability and security.
 
-### Set Up AWS Services
-1. Deploy the AWS Lambda function.
-2. Set up API Gateway and link it to Lambda.
-3. Configure necessary IAM roles and permissions.
+---
 
-## Challenges & Learnings
-- **Security:** Implementing strict access controls to ensure only authorized users can invoke Lambda functions.
-- **API Configuration:** Properly configuring API Gateway to communicate seamlessly with decentralized smart contracts.
-- **Scalability:** Using AWS services to handle backend automation efficiently.
+## Prerequisites
 
-## Conclusion
-This project showcases how Web3 dApps can integrate with AWS to create scalable and automated decentralized systems. By leveraging **smart contracts, AWS Lambda, and IPFS**, you can develop a secure, decentralized infrastructure with cloud-based automation.
+Before running the project, ensure you have the following:
 
+1. **MetaMask Wallet**:
+   - Installed in your browser.
+   - Configured to use the Goerli testnet.
+   - Funded with test ETH from a faucet (e.g., [https://goerlifaucet.com](https://cloud.google.com/application/web3/faucet/ethereum/sepolia)).
 
+2. **AWS Account**:
+   - Access to AWS Lambda, API Gateway, and IAM roles.
+
+3. **Node.js and npm**:
+   - Required for running the React frontend.
+
+4. **Infura Project**:
+   - Create an Infura account and obtain a project ID for connecting to the Ethereum network.
+
+5. **Solidity Compiler**:
+   - Install Hardhat or Remix IDE for deploying the smart contract.
+
+---
+
+## Setup Instructions
+
+### Smart Contract Deployment
+
+1. **Write the ERC20 Token Contract**:
+   ```solidity
+   // SPDX-License-Identifier: MIT
+   pragma solidity ^0.8.0;
+
+   import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+   contract MyToken is ERC20 {
+       constructor(uint256 initialSupply) ERC20("MyToken", "MTK") {
+           _mint(msg.sender, initialSupply);
+       }
+   }
+   ```
+
+2. **Deploy the Contract**:
+   - Use Remix IDE or Hardhat to deploy the contract on the Goerli testnet.
+   - Note the contract address and ABI after deployment.
+
+---
+
+### AWS Lambda Function
+
+1. **Create the Lambda Function**:
+   - Go to the AWS Management Console > Lambda > Create Function.
+   - Choose Node.js runtime and configure permissions.
+
+2. **Lambda Code**:
+   ```javascript
+   const Web3 = require('web3');
+   const ABI = [/* Paste your ERC20 ABI here */];
+   const CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS';
+
+   exports.handler = async (event) => {
+       const web3 = new Web3('https://goerli.infura.io/v3/YOUR_INFURA_PROJECT_ID');
+       const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+       try {
+           const userAddress = event.address;
+           const balance = await contract.methods.balanceOf(userAddress).call();
+           return {
+               statusCode: 200,
+               body: JSON.stringify({ balance }),
+           };
+       } catch (error) {
+           console.error(error);
+           return {
+               statusCode: 500,
+               body: JSON.stringify({ error: 'Failed to fetch balance' }),
+           };
+       }
+   };
+   ```
+
+3. **Install Dependencies**:
+   - Package `web3` with your Lambda deployment or use AWS Lambda Layers.
+
+---
+
+### API Gateway
+
+1. **Create the API**:
+   - Go to the AWS Management Console > API Gateway > Create API.
+   - Choose HTTP API and integrate it with the Lambda function.
+
+2. **Deploy the API**:
+   - Deploy the API and note the endpoint URL.
+
+---
+
+### Frontend Setup
+
+1. **Create React App**:
+   ```bash
+   npx create-react-app dapp-frontend
+   cd dapp-frontend
+   npm install web3 axios
+   ```
+
+2. **Frontend Code**:
+   ```javascript
+   import React, { useState } from 'react';
+   import Web3 from 'web3';
+   import axios from 'axios';
+
+   const App = () => {
+       const [account, setAccount] = useState('');
+       const [balance, setBalance] = useState('');
+
+       const connectWallet = async () => {
+           if (window.ethereum) {
+               const web3 = new Web3(window.ethereum);
+               await window.ethereum.request({ method: 'eth_requestAccounts' });
+               const accounts = await web3.eth.getAccounts();
+               setAccount(accounts[0]);
+           } else {
+               alert('Please install MetaMask!');
+           }
+       };
+
+       const fetchBalance = async () => {
+           try {
+               const response = await axios.post('https://your-api-gateway-url.amazonaws.com/default/BlockchainHandler', {
+                   address: account,
+               });
+               setBalance(response.data.balance);
+           } catch (error) {
+               console.error(error);
+               alert('Failed to fetch balance');
+           }
+       };
+
+       return (
+           <div>
+               <h1>ERC20 DApp</h1>
+               <button onClick={connectWallet}>Connect Wallet</button>
+               {account && <p>Connected Account: {account}</p>}
+               <button onClick={fetchBalance} disabled={!account}>Fetch Balance</button>
+               {balance && <p>Token Balance: {balance}</p>}
+           </div>
+       );
+   };
+
+   export default App;
+   ```
+
+3. **Run the App**:
+   ```bash
+   npm start
+   ```
+
+---
+
+## How It Works
+
+1. The user connects their MetaMask wallet to the React app.
+2. The frontend sends the user's Ethereum address to the AWS API Gateway.
+3. The API Gateway forwards the request to the AWS Lambda function.
+4. The Lambda function queries the ERC20 smart contract for the token balance.
+5. The response is sent back to the frontend, which displays the balance.
+
+---
+
+## Tools and Technologies
+
+| Component               | Technology/Tool              |
+|-------------------------|------------------------------|
+| Frontend                | React.js, Axios             |
+| Wallet Integration      | MetaMask                    |
+| Backend                 | AWS Lambda (Node.js)        |
+| API Exposure            | AWS API Gateway             |
+| Blockchain Interaction  | Web3.js, Infura             |
+| Smart Contract          | Solidity, OpenZeppelin      |
+| Blockchain Network      | Ethereum (Sepolia Testnet)   |
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/YourFeatureName`).
+3. Commit your changes (`git commit -m 'Add some feature'`).
+4. Push to the branch (`git push origin feature/YourFeatureName`).
+5. Open a pull request.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+Let me know if you need further assistance!
